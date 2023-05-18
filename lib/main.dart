@@ -73,6 +73,10 @@ class _TodoListPageState extends State<TodoListPage> {
                                                   todoList.removeAt(index);
                                                 });
                                                 Navigator.pop(context);
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(SnackBar(
+                                                        content:
+                                                            Text('削除しました')));
                                               },
                                             )
                                           ]);
