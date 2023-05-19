@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 void main() {
   //最初に表示するwidget
@@ -36,19 +37,33 @@ class _TodoListPageState extends State<TodoListPage> {
       appBar: AppBar(
         title: Text('リスト一覧'),
       ),
-
       //bodyを例文から実際に使えるものに変更した
       body: ListView.builder(
-        //データをリスト化する
         itemCount: todoList.length, //length リスト内の要素の数を変更する
         itemBuilder: (context, index) {
-          return Card(
-            child: ListTile(
-              title: Text(todoList[index]),
-            ),
-          );
+          return Slidable(
+              child: Card(
+                child: ListTile(
+                  title: Text(todoList[index]),
+                ),
+              ),
+              endActionPane: ActionPane(
+                  extentRatio: 0.25, //スライド時に表示するwidgetの大きさ
+                  motion: const ScrollMotion(), //スライドアニメーションの種類
+                  children: [
+                    SlidableAction(
+                        onPressed: (_) {
+                          setState(() {
+                            todoList.remove(todoList[index]);
+                          });
+                        },
+                        backgroundColor: Colors.red,
+                        icon: Icons.delete,
+                        label: '削除')
+                  ]));
         },
       ),
+
       floatingActionButton: FloatingActionButton(
         //追加３　リスト追加画面からのデータを受け取る async~await,47
         onPressed: () async {
