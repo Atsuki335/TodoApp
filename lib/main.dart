@@ -34,58 +34,78 @@ class _TodoListPageState extends State<TodoListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('リスト一覧'),
-      ),
-      //bodyを例文から実際に使えるものに変更した
-      body: ListView.builder(
-        itemCount: todoList.length, //length リスト内の要素の数を変更する
-        itemBuilder: (context, index) {
-          return Slidable(
-              child: Card(
-                child: ListTile(
-                  title: Text(todoList[index]),
-                ),
-              ),
-              endActionPane: ActionPane(
-                  extentRatio: 0.25, //スライド時に表示するwidgetの大きさ
-                  motion: const ScrollMotion(), //スライドアニメーションの種類
-                  children: [
-                    SlidableAction(
-                        onPressed: (_) {
-                          setState(() {
-                            todoList.remove(todoList[index]);
-                          });
-                        },
-                        backgroundColor: Colors.red,
-                        icon: Icons.delete,
-                        label: '削除')
-                  ]));
-        },
-      ),
-
-      floatingActionButton: FloatingActionButton(
-        //追加３　リスト追加画面からのデータを受け取る async~await,47
-        onPressed: () async {
-          final newListText = await
-              //Navigatorをpushで新規画面に遷移
-              Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) {
-              //遷移先の画面としてリスト追加画面を指定
-              return TodoAddPage();
+        appBar: AppBar(
+          title: Text('リスト一覧'),
+        ),
+        body: ListView.builder(
+            itemCount: todoList.length, //length リスト内の要素の数を変更する
+            itemBuilder: (context, index) {
+              return Slidable(
+                  child: Card(
+                    child: ListTile(
+                      title: Text(todoList[index]),
+                    ),
+                  ),
+                  endActionPane: ActionPane(
+                      extentRatio: 0.25, //スライド時に表示するwidgetの大きさ
+                      motion: const ScrollMotion(), //スライドアニメーションの種類
+                      children: [
+                        SlidableAction(
+                            onPressed: (_) async {
+                              await showDialog(
+                                  context: context,
+                                  builder: (context) {
+                                    return StatefulBuilder(
+                                        builder: (context, StepState) {
+                                      return AlertDialog(
+                                          title: Text("このタスクを消去"),
+                                          content: Text("本当に消しちゃう？"),
+                                          actions: [
+                                            TextButton(
+                                              child: Text('キャンセル'),
+                                              onPressed: () =>
+                                                  Navigator.pop(context),
+                                            ),
+                                            TextButton(
+                                              child: Text('OK'),
+                                              onPressed: () {
+                                                setState(() {
+                                                  todoList.removeAt(index);
+                                                });
+                                                Navigator.pop(context);
+                                              },
+                                            )
+                                          ]);
+                                    });
+                                  });
+                            },
+                            backgroundColor: Colors.red,
+                            icon: Icons.delete,
+                            label: '削除')
+                      ]));
             }),
-          );
-          if (newListText != null) {
-            //キャンセルした場合はnewListTextがnullとなるので注意
-            setState(() {
-              //リスト追加
-              todoList.add(newListText);
-            });
-          }
-        },
-        child: Icon(Icons.add),
-      ),
-    );
+        floatingActionButton: FloatingActionButton(
+          //追加３　リスト追加画面からのデータを受け取る async~await,47
+          onPressed: () async {
+            final newListText = await
+                //Navigatorをpushで新規画面に遷移
+                Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) {
+                //遷移先の画面としてリスト追加画面を指定
+                return TodoAddPage();
+              }),
+            );
+            if (newListText != null) {
+              //キャンセルした場合はnewListTextがnullとなるので注意
+              setState(() {
+                //リスト追加
+                todoList.add(newListText);
+              });
+            }
+          },
+
+          child: Icon(Icons.add),
+        ));
   }
 }
 
