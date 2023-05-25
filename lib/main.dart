@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:mytodoapp/todo_list_store.dart';
 
 void main() {
   //最初に表示するwidget
@@ -29,7 +30,19 @@ class TodoListPage extends StatefulWidget {
 
 class _TodoListPageState extends State<TodoListPage> {
 //Todoリストのデータ
-  List<String> todoList = [];
+  List<String> todoList = TodoListStore().list;
+
+  @override
+  void initState() {
+    super.initState();
+
+    Future(
+      () async {
+        // ストアからTodoリストデータをロードし、画面を更新する
+        setState(() => {});
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,31 +54,18 @@ class _TodoListPageState extends State<TodoListPage> {
             itemCount: todoList.length, //length リスト内の要素の数を変更する
             itemBuilder: (context, index) {
               return Slidable(
-                  child: Card(
-                    child: ListTile(
-                      title: Text(todoList[index]),
-                    ),
-                  ),
                   endActionPane: ActionPane(
                       extentRatio: 0.50, //スライド時に表示するwidgetの大きさ
                       motion: const ScrollMotion(), //スライドアニメーションの種類
                       children: [
                         SlidableAction(
-                            onPressed: (_) async {
-                              //編集画面に遷移する変数
-                              final editListText =
-                                  await Navigator.of(context).push(
+                            onPressed: (context) async {
+                              await Navigator.of(context).push(
                                 MaterialPageRoute(builder: (context) {
-                                  return TodoEditPage();
+                                  return TodoEditPage(index: index);
                                 }),
                               );
-                              if (editListText != null) {
-                                setState(() {
-                                  todoList.removeAt(index);
-                                  todoList.add(editListText);
-                                });
-                              }
-                              ;
+                              setState(() {});
                             },
                             backgroundColor: Colors.blue,
                             icon: Icons.mode_edit,
@@ -106,7 +106,11 @@ class _TodoListPageState extends State<TodoListPage> {
                             backgroundColor: Colors.red,
                             icon: Icons.delete,
                             label: '削除'),
-                      ]));
+                      ]),
+                  child: Card(
+                      child: ListTile(
+                    title: Text(todoList[index]),
+                  )));
             }),
         floatingActionButton: FloatingActionButton(
           //追加３　リスト追加画面からのデータを受け取る async~await,47
@@ -202,14 +206,27 @@ class _TodoAddPageState extends State<TodoAddPage> {
 
 //編集画面用
 class TodoEditPage extends StatefulWidget {
-  //statelessをstatefulに変えたことで増えたコード　５６〜６１
+  final int? index;
+  const TodoEditPage({Key? key, this.index}) : super(key: key);
+
   @override
   _TodoEditPageState createState() => _TodoEditPageState();
 }
 
 class _TodoEditPageState extends State<TodoEditPage> {
-  //入力されたテキストをデータとして持つ(StatefulとStateが必要)
+  final TodoListStore _store = TodoListStore();
+  final _controller = TextEditingController();
+
   String _text = '';
+  @override
+  void initState() {
+    super.initState();
+    final todo = _store.list[widget.index!];
+    _controller.text = todo;
+    _text = todo;
+  }
+
+  //入力されたテキストをデータとして持つ(StatefulとStateが必要)
 
   @override
   Widget build(BuildContext context) {
@@ -236,12 +253,19 @@ class _TodoEditPageState extends State<TodoEditPage> {
                         _text = value;
                       });
                     },
+                    // TextFieldの初期値に_textを設定
+                    controller: _controller,
                   ), //テキスト入力
                   const SizedBox(height: 8),
                   Container(
                     width: double.infinity,
                     child: ElevatedButton(
                         onPressed: () {
+                          _store.update(
+                            _text,
+                            widget.index!,
+                          );
+
 //追加２　popの引数から前の画面にデータを渡す
                           Navigator.of(context).pop(_text);
                           ScaffoldMessenger.of(context)
@@ -250,7 +274,7 @@ class _TodoEditPageState extends State<TodoEditPage> {
                         //colorにエラーが出た。変更後コード　96~97
                         style: ElevatedButton.styleFrom(
                             foregroundColor: Colors.blue),
-                        child: Text('編集する',
+                        child: const Text('リスト編集',
                             style: TextStyle(color: Colors.white))),
                   ),
 
